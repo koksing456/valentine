@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>For Jo Ann 💌</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ffd2e8 0%, #ffc7d2 40%, #ffdff4 100%);
+      font-family: 'Baloo 2', cursive;
+      overflow: hidden;
+      color: #8d2956;
+    }
+
+    /* ── Floating background hearts ── */
+    .bg-heart {
+      position: fixed;
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.18; }
+      90%  { opacity: 0.18; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* ── Shared screen styles ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px 24px;
+      z-index: 10;
+      position: relative;
+    }
+    .screen.active { display: flex; animation: fadeIn 0.6s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* ── SCREEN 1: Envelope ── */
+    .envelope-wrap {
+      cursor: pointer;
+      margin-bottom: 28px;
+      animation: bob 2s ease-in-out infinite;
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .envelope {
+      width: 240px; height: 170px;
+      background: #fff;
+      border-radius: 18px;
+      position: relative;
+      box-shadow: 0 14px 40px rgba(200,60,130,0.2);
+      transition: transform 0.3s;
+    }
+    .envelope:hover { transform: scale(1.04); }
+    .flap {
+      position: absolute; top: 0; left: 0; z-index: 2;
+      width: 0; height: 0;
+      border-left: 120px solid transparent;
+      border-right: 120px solid transparent;
+      border-top: 90px solid #ff5ca0;
+      transform-origin: top center;
+      transition: transform 0.6s ease;
+    }
+    .flap::after {
+      content: '';
+      position: absolute; top: -90px; left: -120px;
+      border-left: 120px solid transparent;
+      border-right: 120px solid transparent;
+      border-bottom: 80px solid #ff8ec4;
+    }
+    .envelope.open .flap { transform: rotateX(180deg); }
+    .envelope-body {
+      width: 100%; height: 100%;
+      background: linear-gradient(145deg, #fff8fc, #ffe6f2);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1;
+    }
+    .envelope-icon { font-size: 44px; animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .letter {
+      position: absolute; z-index: 3;
+      top: 20px; left: 28px;
+      width: 184px; height: 116px;
+      background: #fff; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Pacifico', cursive;
+      font-size: 22px; color: #ff4f93;
+      box-shadow: 0 6px 18px rgba(200,70,130,0.15);
+      opacity: 0; transform: translateY(0);
+      transition: all 0.5s ease 0.3s;
+    }
+    .envelope.open .letter { opacity: 1; transform: translateY(-100px); }
+    .tap-hint {
+      font-size: 16px; font-weight: 700;
+      color: #8d2956; opacity: 0.8;
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    /* ── SCREEN 2: The Question ── */
+    .question {
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(30px, 7vw, 50px);
+      color: #ff4f93;
+      text-shadow: 0 6px 20px rgba(255,100,170,0.3);
+      margin-bottom: 8px;
+    }
+    .from-line {
+      font-size: 18px; font-weight: 700;
+      color: rgba(141,41,86,0.75);
+      margin-bottom: 44px;
+    }
+    .btn-yes {
+      padding: 16px 48px;
+      border: none; border-radius: 999px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 20px; font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(180deg, #ff77ac, #ff4f93);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(255,79,147,0.4);
+      border: 2px solid rgba(255,255,255,0.7);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 10;
+    }
+    .btn-yes:hover { transform: scale(1.08); }
+
+    /* ── NO BUTTON - lives outside screens, position:fixed ── */
+    #no-btn {
+      position: fixed;
+      display: none;
+      padding: 16px 48px;
+      border: none; border-radius: 999px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 20px; font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(180deg, #f4f6ff, #dce2ff);
+      color: #5d6492;
+      border: 2px solid rgba(255,255,255,0.8);
+      box-shadow: 0 8px 20px rgba(93,100,146,0.18);
+      z-index: 9999;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  top 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  transform 0.3s ease,
+                  opacity 0.4s ease;
+    }
+
+    /* ── Rocket the cat ── */
+    .cat {
+      position: fixed;
+      bottom: -100px; right: 24px;
+      z-index: 50;
+      transition: bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .cat.show { bottom: -10px; }
+    .cat img {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 6px 16px rgba(200,60,130,0.25);
+    }
+    .cat-bubble {
+      position: absolute;
+      top: -46px; left: 50%; transform: translateX(-50%);
+      background: #fff;
+      padding: 6px 14px; border-radius: 18px;
+      font-size: 13px; font-weight: 800;
+      color: #ff4f93; white-space: nowrap;
+      box-shadow: 0 8px 16px rgba(255,80,150,0.2);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .cat.show .cat-bubble { opacity: 1; }
+
+    /* ── SCREEN 3: Celebration ── */
+    .celeb { animation: popIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.3); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .big-heart {
+      font-size: 80px; margin-bottom: 16px;
+      animation: heartBeat 1s ease-in-out infinite;
+    }
+    @keyframes heartBeat {
+      0%,100% { transform: scale(1); }
+      15% { transform: scale(1.25); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.15); }
+      60% { transform: scale(1); }
+    }
+    .celeb-title {
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(36px, 9vw, 58px);
+      color: #ff4f93;
+      margin-bottom: 10px;
+    }
+    .celeb-names {
+      font-size: 20px; font-weight: 800; margin-bottom: 20px;
+      opacity: 0; animation: fadeIn 0.6s ease 0.4s forwards;
+    }
+    .celeb-msg {
+      max-width: 340px; font-size: 17px;
+      line-height: 1.6; margin-bottom: 24px;
+      opacity: 0; animation: fadeIn 0.6s ease 0.7s forwards;
+    }
+    .celeb-cat {
+      font-size: 15px; font-weight: 700;
+      opacity: 0; animation: fadeIn 0.6s ease 1s forwards;
+    }
+    .celeb-cat span { font-size: 26px; vertical-align: middle; }
+    .replay {
+      margin-top: 28px; padding: 10px 28px;
+      background: rgba(255,255,255,0.7);
+      border: 2px solid rgba(255,120,180,0.3);
+      color: #ff4f93; border-radius: 999px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 15px; font-weight: 800;
+      cursor: pointer;
+      opacity: 0; animation: fadeIn 0.6s ease 1.4s forwards;
+    }
+    .replay:hover { background: rgba(255,255,255,0.9); }
+
+    /* ── Confetti ── */
+    .confetti {
+      position: fixed; top: -10px; z-index: 200;
+      pointer-events: none; opacity: 0;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(0) rotate(0); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+    }
+    .hburst {
+      position: fixed; z-index: 199; pointer-events: none;
+      animation: burst 1.4s ease-out forwards;
+    }
+    @keyframes burst {
+      0%   { transform: scale(0) translateY(0); opacity: 1; }
+      50%  { opacity: 1; }
+      100% { transform: scale(1.4) translateY(-180px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="bgHearts"></div>
+
+<!-- Rocket the cat -->
+<div class="cat" id="cat"><img src="rocket.png" alt="Rocket"><div class="cat-bubble" id="catMsg">Psst pick yes!</div></div>
+
+<!-- No button - OUTSIDE all screens so position:fixed works -->
+<button id="no-btn">Nope</button>
+
+<!-- Screen 1: Envelope -->
+<div class="screen active" id="s1">
+  <div class="envelope-wrap" id="envWrap">
+    <div class="envelope" id="env">
+      <div class="flap"></div>
+      <div class="envelope-body"><span class="envelope-icon">💌</span></div>
+      <div class="letter">For Jo Ann</div>
+    </div>
+  </div>
+  <p class="tap-hint">Tap to open 💌</p>
+</div>
+
+<!-- Screen 2: Question -->
+<div class="screen" id="s2">
+  <p class="question">Will you be my Valentine?</p>
+  <p class="from-line">with extra sprinkles ✨</p>
+  <button class="btn-yes" id="yes-btn">Yes, always 💖</button>
+</div>
+
+<!-- Screen 3: Celebration -->
+<div class="screen" id="s3">
+  <div class="celeb">
+    <div class="big-heart">💕</div>
+    <div class="celeb-title">I Knew It!</div>
+    <div class="celeb-names">Happy Valentine's Day, Jo Ann</div>
+    <div class="celeb-msg">
+      Every day with you feels like a tiny happy holiday.
+      You're my favorite notification, my best good-morning text,
+      and the only person I'd happily share fries with.
+      <br><br>
+      Happy Valentine's Day, cutie pie 🤍
+    </div>
+    <div class="celeb-cat">
+      <img src="rocket.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;border:2px solid #fff;margin-right:6px;"> Rocket approves this message <img src="rocket.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;border:2px solid #fff;margin-left:6px;">
+    </div>
+    <button class="replay" id="replay-btn">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ── Elements ──
+  var s1 = document.getElementById('s1');
+  var s2 = document.getElementById('s2');
+  var s3 = document.getElementById('s3');
+  var env = document.getElementById('env');
+  var envWrap = document.getElementById('envWrap');
+  var yesBtn = document.getElementById('yes-btn');
+  var noBtn = document.getElementById('no-btn');
+  var cat = document.getElementById('cat');
+  var catMsg = document.getElementById('catMsg');
+  var replayBtn = document.getElementById('replay-btn');
+
+  // ── Background hearts ──
+  var emojis = ['💗','💕','💖','💘','💝','🩷','✨'];
+  var bg = document.getElementById('bgHearts');
+  for (var i = 0; i < 18; i++) {
+    var d = document.createElement('div');
+    d.className = 'bg-heart';
+    d.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    d.style.left = Math.random() * 100 + '%';
+    d.style.fontSize = (14 + Math.random() * 18) + 'px';
+    d.style.animationDuration = (9 + Math.random() * 11) + 's';
+    d.style.animationDelay = (Math.random() * 10) + 's';
+    bg.appendChild(d);
+  }
+
+  // ── State ──
+  var noCount = 0;
+  var dead = false;
+  var opened = false;
+
+  var noTexts = [
+    'Nope',
+    'Are you suuure? 🥺',
+    'Really really?? 😢',
+    'Tiny reconsider? 💗',
+    'Rocket will cry! 😿',
+    'Still no?? aww 😭',
+    'Think again!! 🥹',
+    'Final chance... 🐾'
+  ];
+  var catTexts = [
+    'Psst pick yes!',
+    'Say yesss! ✨',
+    'He practiced this! 🐱',
+    '*dramatic meow* 😿',
+    'YES would be cute!',
+    'Pretty please? 🐾',
+    '*angry meow* 😾',
+    '...'
+  ];
+
+  // ── Screen 1: Open envelope ──
+  envWrap.addEventListener('click', function() {
+    if (opened) return;
+    opened = true;
+    env.classList.add('open');
+    setTimeout(function() {
+      s1.classList.remove('active');
+      s2.classList.add('active');
+      // Show No button positioned next to Yes button
+      setTimeout(function() {
+        var r = yesBtn.getBoundingClientRect();
+        noBtn.style.left = (r.right + 16) + 'px';
+        noBtn.style.top = (r.top) + 'px';
+        noBtn.style.display = 'block';
+      }, 50);
+    }, 1100);
+  });
+
+  // ── No button: teleport to random spot ──
+  function teleport() {
+    if (dead) return;
+    noCount++;
+
+    // Loop back to start when we run out of texts
+    var idx = noCount % noTexts.length;
+
+    // Update text
+    noBtn.textContent = noTexts[idx];
+
+    // Shrink slightly but never below 0.6
+    var scale = Math.max(0.6, 1 - idx * 0.05);
+    noBtn.style.transform = 'scale(' + scale + ')';
+
+    // Jump to random spot
+    var w = noBtn.offsetWidth;
+    var h = noBtn.offsetHeight;
+    var pad = 20;
+    var oldR = noBtn.getBoundingClientRect();
+    var nx, ny, t = 0;
+    do {
+      nx = pad + Math.random() * (window.innerWidth - w - pad * 2);
+      ny = pad + Math.random() * (window.innerHeight - h - pad * 2);
+      t++;
+    } while (t < 60 && Math.hypot(nx - oldR.left, ny - oldR.top) < 160);
+    noBtn.style.left = nx + 'px';
+    noBtn.style.top = ny + 'px';
+
+    // Grow Yes button but cap it
+    var grow = Math.min(noCount, 6);
+    yesBtn.style.fontSize = (20 + grow * 2) + 'px';
+    yesBtn.style.padding = (16 + grow * 2) + 'px ' + (48 + grow * 5) + 'px';
+
+    // Rocket peeks
+    cat.classList.add('show');
+    catMsg.textContent = catTexts[idx];
+
+    if (navigator.vibrate) navigator.vibrate(60);
+  }
+
+  // mouseenter = fires BEFORE click on desktop, button escapes instantly
+  noBtn.addEventListener('mouseenter', teleport);
+
+  // touchstart = fires BEFORE click on mobile, prevent default blocks the tap
+  noBtn.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    teleport();
+  }, { passive: false });
+
+  // pointerdown backup for some mobile browsers
+  noBtn.addEventListener('pointerdown', function(e) {
+    if (e.pointerType === 'touch') {
+      e.preventDefault();
+      teleport();
+    }
+  }, { passive: false });
+
+  // click backup - should never actually fire but just in case
+  noBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    teleport();
+  });
+
+  // ── Yes button ──
+  yesBtn.addEventListener('click', function() {
+    noBtn.style.display = 'none';
+    cat.classList.remove('show');
+    s2.classList.remove('active');
+    s3.classList.add('active');
+    confetti();
+    hearts();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+    setTimeout(confetti, 500);
+    setTimeout(confetti, 1000);
+  });
+
+  // ── Effects ──
+  function confetti() {
+    var colors = ['#ff4f93','#ff80ab','#ffd54f','#e040fb','#fff','#ff5252','#42a5f5'];
+    for (var i = 0; i < 45; i++) {
+      var c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + '%';
+      c.style.width = (6 + Math.random() * 7) + 'px';
+      c.style.height = (6 + Math.random() * 7) + 'px';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      c.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      c.style.animationDelay = (Math.random() * 0.4) + 's';
+      document.body.appendChild(c);
+      setTimeout(function(el) { el.remove(); }, 4000, c);
+    }
+  }
+  function hearts() {
+    var h = ['💗','💕','💖','💘','💝','🩷','❤️','🤍'];
+    for (var i = 0; i < 14; i++) {
+      var el = document.createElement('div');
+      el.className = 'hburst';
+      el.textContent = h[Math.floor(Math.random() * h.length)];
+      el.style.left = (15 + Math.random() * 70) + '%';
+      el.style.top = (35 + Math.random() * 30) + '%';
+      el.style.fontSize = (18 + Math.random() * 14) + 'px';
+      el.style.animationDelay = (Math.random() * 0.4) + 's';
+      document.body.appendChild(el);
+      setTimeout(function(el) { el.remove(); }, 2000, el);
+    }
+  }
+
+  // ── Replay ──
+  replayBtn.addEventListener('click', function() {
+    noCount = 0;
+    dead = false;
+    opened = false;
+    noBtn.textContent = 'Nope';
+    noBtn.style.cssText = 'position:fixed;display:none;';
+    yesBtn.style.cssText = '';
+    env.classList.remove('open');
+    s3.classList.remove('active');
+    s1.classList.add('active');
+    cat.classList.remove('show');
+    catMsg.textContent = 'Psst pick yes!';
+  });
+})();
+</script>
+</body>
+</html>
